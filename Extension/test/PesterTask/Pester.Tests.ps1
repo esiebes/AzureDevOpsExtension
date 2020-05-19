@@ -89,6 +89,31 @@ Describe "Testing Pester Task" {
         }
     }
 
+    Context "Testing import pester in main script" {
+        BeforeAll {
+            $importModuleCommand = Get-Command Import-Module
+            Mock Invoke-Pester { return @{ Name = "PowershellGet"} } -ParameterFilter {$Name -and $Name -eq 'PowerShellGet'} 
+            Mock Get-Command { 
+                return @{ Parameters = @{ SkipPublisherCheck = $True}}
+            } -ModuleName "HelperModule" -ParameterFilter { $Name -and $Name -eq "Install-Module"}
+            Mock Get-PSRepository { return $True}
+            Mock Get-PackageProvider { return $true} -ParameterFilter { $Name -and $Name -eq "Nuget"}
+            Mock Find-Module  { return [PsCustomObject]@{Version="1.0.0";Repository="Default"}} -ParameterFilter { $Name -eq "Pester" }
+            Mock Install-Module {} -ParameterFilter { $Name -eq "Pester" }
+            Mock Import-Module { 
+                & $importModuleCommand -Name "$PSScriptRoot\FakePester.psm1" -Global:$Global
+            } -ModuleName "HelperModule" -ParameterFilter { $Name -eq "Pester" }
+
+        }
+        It "Fakepester should be imported in main script" {
+            Import-Pester -Version "9.0.0"
+            (Get-Module -Name FakePester) | Should -Not -BeNull
+        }
+        AfterAll {
+            Remove-Module -Name "FakePester"
+        }
+    }
+
     Context "Testing Task Processing" {
         BeforeAll {
             mock Invoke-Pester { "Tag" } -ParameterFilter {$Tag -and $Tag -eq 'Infrastructure'}
@@ -136,6 +161,8 @@ Describe "Testing Pester Task" {
             }
         }
     }
+
+
 
     Context "Testing Task Output" {
         BeforeAll {
