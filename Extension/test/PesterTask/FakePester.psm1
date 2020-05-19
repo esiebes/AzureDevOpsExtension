@@ -1,4 +1,4 @@
-function Fake-Function
+function Invoke-Fakefunction
 {
     [CmdletBinding()]
     Param

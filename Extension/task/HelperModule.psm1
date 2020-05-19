@@ -58,7 +58,8 @@ function Import-Pester {
             }
         }
         else {
-            $NewestPester = Find-Module -Name Pester -RequiredVersion $Version | Select-Object -First 1
+            $pesters = Find-Module -Name Pester -RequiredVersion $Version
+            $NewestPester = $pesters | Select-Object -First 1
 
             Install-Module -Name Pester -RequiredVersion $NewestPester.Version -Scope CurrentUser -Force -Repository $NewestPester.Repository -SkipPublisherCheck
         }
